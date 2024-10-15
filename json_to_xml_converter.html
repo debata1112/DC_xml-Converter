@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to XML Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .logo {
+            display: block;
+            margin: 0 auto 20px;
+            max-width: 150px;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .half {
+            width: 48%;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            margin-bottom: 20px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: #eaeaea;
+            padding: 10px;
+            border-radius: 4px;
+            overflow: auto;
+            height: 300px;
+        }
+        @media (max-width: 800px) {
+            .container {
+                flex-direction: column;
+            }
+            .half {
+                width: 100%;
+            }
+        }
+    </style>
+    <script>
+        function jsonToXml(jsonObj) {
+            let xml = '';
+
+            function buildXmlElement(obj, indent = '') {
+                for (let key in obj) {
+                    if (obj.hasOwnProperty(key)) {
+                        if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+                            xml += `${indent}<${key}`;
+                            for (let attr in obj[key]) {
+                                if (attr.startsWith('@')) {
+                                    xml += ` ${attr.slice(1)}="${obj[key][attr]}"`;
+                                }
+                            }
+                            xml += '>\n';
+                            buildXmlElement(obj[key], indent + '    ');
+                            xml += `${indent}</${key}>\n`;
+                        } else if (Array.isArray(obj[key])) {
+                            obj[key].forEach(item => {
+                                xml += `${indent}<${key}>\n`;
+                                buildXmlElement({ [key]: item }, indent + '    ');
+                                xml += `${indent}</${key}>\n`;
+                            });
+                        } else {
+                            if (!key.startsWith('@')) {
+                                xml += `${indent}<${key}>${obj[key]}</${key}>\n`;
+                            }
+                        }
+                    }
+                }
+            }
+
+            buildXmlElement(jsonObj);
+            return xml.trim();
+        }
+
+        function convert() {
+            const jsonInput = document.getElementById('jsonInput').value;
+            try {
+                const jsonObj = JSON.parse(jsonInput);
+                const xmlOutput = jsonToXml(jsonObj);
+                document.getElementById('xmlOutput').innerText = xmlOutput;
+                document.getElementById('copyButton').style.display = 'inline'; // Show copy button
+            } catch (error) {
+                alert('Invalid JSON: ' + error.message);
+                document.getElementById('copyButton').style.display = 'none'; // Hide copy button
+            }
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('xmlOutput');
+            const range = document.createRange();
+            range.selectNode(output);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            window.getSelection().removeAllRanges();
+            alert('XML copied to clipboard!');
+        }
+    </script>
+</head>
+<body>
+    <img src="C:\Users\7319\Downloads\logo.png" alt="Logo" class="logo">
+    <h1>JSON to XML Converter</h1>
+    <div class="container">
+        <div class="half">
+            <h2>Input JSON:</h2>
+            <textarea id="jsonInput" placeholder='{"session":{"@id":"34857","@clientId":"08DCCD6A97020F84"}}'></textarea>
+            <button onclick="convert()">Convert</button>
+            <button id="copyButton" onclick="copyToClipboard()" style="display:none;">Copy XML</button> <!-- Initially hidden -->
+        </div>
+        <div class="half">
+            <h2>Output XML:</h2>
+            <pre id="xmlOutput"></pre>
+        </div>
+    </div>
+</body>
+</html>
